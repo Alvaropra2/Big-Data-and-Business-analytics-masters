@@ -1,0 +1,100 @@
+## First steps in NLP
+# Practicing NLTK 
+
+import nltk
+# 1. Creating a sentence that is going to be the entry of our chain NLP
+
+text = "I would love to have pizza for dinner"
+print("\n\n1. Text:", text)
+
+1. Text: I would love to have pizza for dinner
+# 2. Lets divide the text into phrases
+
+sentences = nltk.tokenize.sent_tokenize(text)
+print("\n\n2. Phrases:", sentences)
+
+2. Phrases: ['I would love to have pizza for dinner']
+# 3. Tokenization of the text
+tokens = nltk.word_tokenize(text)
+print("\n\n3. Tokens:", tokens)
+
+3. Tokens: ['I', 'would', 'love', 'to', 'have', 'pizza', 'for', 'dinner']
+# Morphological analysis
+tagged = nltk.pos_tag(tokens)
+print("\n\n4. Morphological analysis:", tagged)
+
+4. Morphological analysis: [('I', 'PRP'), ('would', 'MD'), ('love', 'VB'), ('to', 'TO'), ('have', 'VB'), ('pizza', 'NN'), ('for', 'IN'), ('dinner', 'NN')]
+#Stemming: extracting the root 
+from nltk.stem import PorterStemmer
+stemmer = PorterStemmer()
+print("\n\n5. Stems:")
+for tok in tokens:
+    print(stemmer.stem(tok.lower()))
+
+5. Stems:
+i
+would
+love
+to
+have
+pizza
+for
+dinner
+# Lematizacion
+from nltk.stem import WordNetLemmatizer 
+lemmatizer = WordNetLemmatizer()
+#El lematizador de wordnet solo reconoce 4 etiquetas POS: a (adjetivo), r(adverbio),n (nombre),v(verbo). 
+#Así que debemos hacer una conversión del formato Penn Tree Bank al formato wordnet (ej: NN->n, JJ->a, RB->r, VB->V, ...)
+from nltk.corpus import wordnet
+wnTags = {'N':wordnet.NOUN,'J':wordnet.ADJ,'V':wordnet.VERB,'R':wordnet.ADV} 
+print ("\n\n\n6. Lemas: ")
+for (tok,tag) in tagged:
+    #wordnet no contiene las formas abreviadas 'm , 's y  n't así que las introducimos nosotros para que lematice bien
+    if tok=='\'m':
+        tok = 'am'
+    if tok=='\'s':
+        tok = 'is'
+    if tok=='n\'t':
+        tok = 'not'
+    tag = tag[:1]
+    lemma = lemmatizer.lemmatize(tok.lower(),wnTags.get(tag,wordnet.NOUN))
+    if lemma is None: #Si wordnet no contiene la palabra, supondremos que el lema es igual al token
+       lemma = tok.lower() 
+    print (lemma)
+    
+
+
+6. Lemas: 
+i
+would
+love
+to
+have
+pizza
+for
+dinner
+groucho = ['I', 'shot', 'an', 'elephant', 'in', 'my', 'pijamas'] #
+grammar = nltk.CFG.fromstring("""
+S -> NP VP
+PP -> P NP
+NP -> Det N | Det N PP | 'I'
+VP -> V NP | VP PP
+Det -> 'an' | 'my'
+N -> 'elephant' | 'pijamas'
+V -> 'shot' | 'did'
+P -> 'in'
+""")
+
+#Generamos un parser sintáctico capaz de reconocer la gramática
+parser = nltk.ChartParser(grammar)
+print ('Analisis sintactico:\n')
+for tree in parser.parse(groucho):
+    print(tree,'\n')
+    tree.draw()
+Analisis sintactico:
+
+(S
+  (NP I)
+  (VP
+    (VP (V shot) (NP (Det an) (N elephant)))
+    (PP (P in) (NP (Det my) (N pijamas))))) 
